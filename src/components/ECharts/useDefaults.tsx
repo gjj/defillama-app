@@ -58,11 +58,13 @@ interface IUseDefaultsProps {
 	title: string
 	tooltipSort?: boolean
 	tooltipOrderBottomUp?: boolean
+	tooltipValuesRelative?: boolean
 	valueSymbol?: string
 	hideLegend?: boolean
 	isStackedChart?: boolean
 	unlockTokenSymbol?: string
 	isThemeDark: boolean
+	hideOthersInTooltip?: boolean
 }
 
 export function useDefaults({
@@ -70,11 +72,13 @@ export function useDefaults({
 	title,
 	tooltipSort = true,
 	tooltipOrderBottomUp,
+	tooltipValuesRelative,
 	valueSymbol = '',
 	hideLegend,
 	isStackedChart,
 	unlockTokenSymbol = '',
-	isThemeDark
+	isThemeDark,
+	hideOthersInTooltip
 }: IUseDefaultsProps) {
 	const isSmall = useMedia(`(max-width: 37.5rem)`)
 
@@ -132,7 +136,13 @@ export function useDefaults({
 				if (isStackedChart) {
 					filteredParams.reverse()
 				} else {
-					filteredParams.sort((a, b) => (tooltipSort ? Math.abs(b.value[1]) - Math.abs(a.value[1]) : 0))
+					filteredParams.sort((a, b) =>
+						tooltipSort
+							? tooltipValuesRelative
+								? b.value[1] - a.value[1]
+								: Math.abs(b.value[1]) - Math.abs(a.value[1])
+							: 0
+					)
 				}
 
 				const otherIndex = filteredParams.findIndex((item) => item.seriesName === 'Others')
@@ -174,7 +184,7 @@ export function useDefaults({
 						'</li>')
 				}, '')
 
-				if (otherParams.length !== 0) {
+				if (otherParams.length !== 0 && !hideOthersInTooltip) {
 					const otherString =
 						'<li style="list-style:none">' +
 						(others?.marker ?? otherParams[0].marker) +
@@ -363,7 +373,8 @@ export function useDefaults({
 		hideLegend,
 		isStackedChart,
 		tooltipOrderBottomUp,
-		unlockTokenSymbol
+		unlockTokenSymbol,
+		hideOthersInTooltip
 	])
 
 	return defaults
