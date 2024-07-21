@@ -1,6 +1,6 @@
 import { ColumnDef, sortingFns } from '@tanstack/react-table'
 import styled from 'styled-components'
-import { ArrowUpRight, ChevronDown, ChevronRight, Tool } from 'react-feather'
+import { ArrowUpRight, ChevronDown, ChevronRight, Mail, Tool } from 'react-feather'
 import IconsRow from '~/components/IconsRow'
 import { CustomLink } from '~/components/Link'
 import QuestionHelper from '~/components/QuestionHelper'
@@ -37,8 +37,8 @@ import type {
 	IETFRow,
 	AirdropRow,
 	IBridgedRow,
-	CategoryReturnsRow,
-	CoinReturnsRow
+	CategoryPerformanceRow,
+	CoinPerformanceRow
 } from './types'
 import { AutoColumn } from '~/components/Column'
 import { useEffect, useState } from 'react'
@@ -552,9 +552,21 @@ export const activeInvestorsColumns: ColumnDef<{
 		accessorKey: 'name',
 		enableSorting: false,
 		cell: ({ getValue }) => {
-			return <CustomLink href={`/raises/${standardizeProtocolName(getValue() as string)}`}>{getValue()}</CustomLink>
+			return (
+				<Tooltip2 content={'Looking for investors? Send your pitch to selected ones through us'}>
+					<div style={{ display: 'flex', gap: '8px' }} onClick={() => window.open('/pitch', '_blank')}>
+						<CustomLink href={`/raises/${standardizeProtocolName(getValue() as string)}`}>{getValue()}</CustomLink>
+						<Mail
+							style={{ minHeight: '16px', minWidth: '16px', width: '16px', height: '16px' }}
+							color="#2172E5"
+							cursor={'pointer'}
+						/>
+					</div>
+				</Tooltip2>
+			)
+			return
 		},
-		size: 120
+		size: 200
 	},
 	{
 		header: 'Deals',
@@ -1758,7 +1770,7 @@ export const AirdropColumn: ColumnDef<AirdropRow>[] = [
 	}
 ]
 
-export const CategoryReturnsColumn: ColumnDef<CategoryReturnsRow>[] = [
+export const CategoryPerformanceColumn: ColumnDef<CategoryPerformanceRow>[] = [
 	{
 		header: 'Category',
 		accessorKey: 'name',
@@ -1769,11 +1781,27 @@ export const CategoryReturnsColumn: ColumnDef<CategoryReturnsRow>[] = [
 			return (
 				<Name>
 					<span>{index + 1}.</span>
-					<CustomLink href={`/narrative-tracker/${row.original.id}`}>{getValue()}</CustomLink>
+					{['bitcoin', 'ethereum', 'solana'].includes(row.original.id) ? (
+						<CustomLink href={`https://www.coingecko.com/en/coins/${row.original.id}`} target="_blank">
+							{getValue()}
+						</CustomLink>
+					) : (
+						<CustomLink href={`/narrative-tracker/${row.original.id}`}>{getValue()}</CustomLink>
+					)}
 				</Name>
 			)
 		},
 		size: 240
+	},
+	{
+		header: 'Δ%',
+		accessorKey: 'change',
+		cell: ({ getValue }) => <>{formattedPercent(getValue())}</>,
+		meta: {
+			align: 'end',
+			headerHelperText: `Shows how a category of coins has performed over your chosen time period and in your selected denomination (e.g., $, BTC). Method: 1. calculating the percentage change for each individual coin in the category. 2. weighting these changes based on each coin's market capitalization. 3. averaging these weighted changes to get the overall category performance.`
+		},
+		size: 120
 	},
 	{
 		header: 'Market Cap',
@@ -1785,58 +1813,13 @@ export const CategoryReturnsColumn: ColumnDef<CategoryReturnsRow>[] = [
 		size: 110
 	},
 	{
-		header: '1D Change',
-		accessorKey: 'returns1D',
-		cell: ({ getValue }) => <>{formattedPercent(getValue())}</>,
-		meta: {
-			align: 'end'
-		},
-		size: 110
-	},
-	{
-		header: '7D Change',
-		accessorKey: 'returns1W',
-		cell: ({ getValue }) => <>{formattedPercent(getValue())}</>,
-		meta: {
-			align: 'end'
-		},
-		size: 110
-	},
-	{
-		header: '30D Change',
-		accessorKey: 'returns1M',
-		cell: ({ getValue }) => <>{formattedPercent(getValue())}</>,
-		meta: {
-			align: 'end'
-		},
-		size: 110
-	},
-	{
-		header: 'YTD Change',
-		accessorKey: 'returnsYtd',
-		cell: ({ getValue }) => <>{formattedPercent(getValue())}</>,
-		meta: {
-			align: 'end'
-		},
-		size: 110
-	},
-	{
-		header: '365D Change',
-		accessorKey: 'returns1Y',
-		cell: ({ getValue }) => <>{formattedPercent(getValue())}</>,
-		meta: {
-			align: 'end'
-		},
-		size: 120
-	},
-	{
 		header: '24h Volume',
 		accessorKey: 'volume1D',
 		cell: ({ getValue }) => <>{getValue() ? '$' + formattedNum(getValue()) : null}</>,
 		meta: {
 			align: 'end'
 		},
-		size: 110
+		size: 120
 	},
 	{
 		header: '# of Coins',
@@ -1849,7 +1832,7 @@ export const CategoryReturnsColumn: ColumnDef<CategoryReturnsRow>[] = [
 	}
 ]
 
-export const CoinReturnsColumn: ColumnDef<CoinReturnsRow>[] = [
+export const CoinPerformanceColumn: ColumnDef<CoinPerformanceRow>[] = [
 	{
 		header: 'Coin',
 		accessorKey: 'name',
@@ -1868,6 +1851,16 @@ export const CoinReturnsColumn: ColumnDef<CoinReturnsRow>[] = [
 		size: 240
 	},
 	{
+		header: 'Δ%',
+		accessorKey: 'change',
+		cell: ({ getValue }) => <>{formattedPercent(getValue())}</>,
+		meta: {
+			align: 'end',
+			headerHelperText: `Shows how a coin has performed over your chosen time period and in your selected denomination (e.g., $, BTC).`
+		},
+		size: 120
+	},
+	{
 		header: 'Market Cap',
 		accessorKey: 'mcap',
 		cell: ({ getValue }) => <>{'$' + formattedNum(getValue())}</>,
@@ -1875,51 +1868,6 @@ export const CoinReturnsColumn: ColumnDef<CoinReturnsRow>[] = [
 			align: 'end'
 		},
 		size: 110
-	},
-	{
-		header: '1D Change',
-		accessorKey: 'returns1D',
-		cell: ({ getValue }) => <>{formattedPercent(getValue())}</>,
-		meta: {
-			align: 'end'
-		},
-		size: 110
-	},
-	{
-		header: '7D Change',
-		accessorKey: 'returns1W',
-		cell: ({ getValue }) => <>{formattedPercent(getValue())}</>,
-		meta: {
-			align: 'end'
-		},
-		size: 110
-	},
-	{
-		header: '30D Change',
-		accessorKey: 'returns1M',
-		cell: ({ getValue }) => <>{formattedPercent(getValue())}</>,
-		meta: {
-			align: 'end'
-		},
-		size: 110
-	},
-	{
-		header: 'YTD Change',
-		accessorKey: 'returnsYtd',
-		cell: ({ getValue }) => <>{formattedPercent(getValue())}</>,
-		meta: {
-			align: 'end'
-		},
-		size: 110
-	},
-	{
-		header: '365D returns',
-		accessorKey: 'returns1Y',
-		cell: ({ getValue }) => <>{formattedPercent(getValue())}</>,
-		meta: {
-			align: 'end'
-		},
-		size: 120
 	},
 	{
 		header: '24h Volume',

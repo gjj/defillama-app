@@ -70,7 +70,6 @@ export const getProtocolDataLite = async (protocol: string) => {
 				.then((res) => res.json())
 				.then((data) => data?.[protocolData.id] ?? null)
 				.catch(() => null),
-			null,
 			fetch(`https://api.llama.fi/overview/fees?excludeTotalDataChartBreakdown=true&excludeTotalDataChart=true`)
 				.then((res) => res.json())
 				.catch((err) => {
@@ -258,7 +257,8 @@ export const getProtocolDataLite = async (protocol: string) => {
 			dailyBribesRevenue,
 			dailyTokenTaxes,
 			bribesRevenue30d,
-			tokenTaxesRevenue30d
+			tokenTaxesRevenue30d,
+			clientSide: true
 		},
 		revalidate: maxAgeForNext([22])
 	}
